@@ -4,6 +4,7 @@ import ErrorHandler from '../utils/errorHandler.js';
 import UserModel from '../model/UserModel.js';
 import Joi from 'joi';
 import dotenv from 'dotenv';
+import { getUserById } from './../services/UserService.js';
 dotenv.config();
 
 // Register User
@@ -20,7 +21,7 @@ export const registrationUser = CatchAsync(async (req, res, next) => {
       return next(new ErrorHandler(error.details[0].message, 422));
     }
 
-    const isEmailExist = await UserModel.findOne({ email : value.email });
+    const isEmailExist = await UserModel.findOne({ email: value.email });
     if (isEmailExist) {
       return next(new ErrorHandler("Email Already Exist", 400));
     }
@@ -28,9 +29,9 @@ export const registrationUser = CatchAsync(async (req, res, next) => {
     try {
       // Note : bcrypt funtion you will find inside usermodel.
       const user = await UserModel.create({
-        email : value.email,
-        username : value.username,
-        password : value.password
+        email: value.email,
+        username: value.username,
+        password: value.password
       });
       res.send({
         status: 200,
@@ -80,6 +81,18 @@ export const loginUser = CatchAsync(async (req, res, next) => {
       token: authToken,
       userId: user._id,
     });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 400));
+  }
+})
+
+export const getUserInfo = CatchAsync(async (req, res, next) => {
+  try {
+    
+    const userId = req.user.id;
+    console.log(req.user)
+    getUserById(userId, res, next);
+
   } catch (error) {
     return next(new ErrorHandler(error.message, 400));
   }
