@@ -1,7 +1,7 @@
 import express from 'express'
 import cors from 'cors'
 import { ErrorMiddleware } from './middleware/error.js';
-// import getHotelRankingRouter from './routes/getHotelRanking.js';
+import userRouter from './routes/userRouter.js';
 
 const app = express();
 
@@ -15,7 +15,7 @@ app.use(cors({
 }))
 
 // routes
-// app.use('/api/v1', getHotelRankingRouter);
+app.use('/api/v1', userRouter);
 
 // testing api
 app.get("/", (req, res)=>{
@@ -34,5 +34,4 @@ app.all("*", (req, res, next)=>{
 // Error Handle Middleware
 app.use(ErrorMiddleware);
 
-// module.exports = app;
-export default app
+export default app;
