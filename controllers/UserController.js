@@ -1,4 +1,5 @@
 import jwt from 'jsonwebtoken';
+import bcrypt from 'bcryptjs';
 import CatchAsync from '../middleware/catchAsyncError.js';
 import ErrorHandler from '../utils/errorHandler.js';
 import UserModel from '../model/UserModel.js';
@@ -88,12 +89,54 @@ export const loginUser = CatchAsync(async (req, res, next) => {
 
 export const getUserInfo = CatchAsync(async (req, res, next) => {
   try {
-    
+
     const userId = req.user.id;
     console.log(req.user)
     getUserById(userId, res, next);
 
   } catch (error) {
+    return next(new ErrorHandler(error.message, 400));
+  }
+})
+
+const updateUserSchema = Joi.object({
+  username: Joi.string().min(3).max(30),
+  email: Joi.string().email(),
+  OldPassword: Joi.string().min(6),
+  NewPassword: Joi.string().min(6),
+}).or('username', 'email', 'OldPassword', 'NewPassword');
+
+export const updateUserInfo = CatchAsync(async (req, res, next) => {
+  try {
+    const { error, value } = updateUserSchema.validate(req.body);
+    if (error) {
+      return next(new ErrorHandler(error.details[0].message, 422));
+    }
+
+    const { username, email, OldPassword, NewPassword } = value;
+    const user = await UserModel.findById(req.user.id).select("+password");
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+    const updateFields = {};
+    if (username) updateFields.username = username;
+    if (email) updateFields.email = email;
+
+    if (OldPassword && NewPassword) {
+      const isPasswordMatch = await user.comparePassword(OldPassword);
+      if (!isPasswordMatch) {
+        return next(new ErrorHandler("Invlalid Old password", 400));
+      }
+      // Hash the new password before saving
+      const salt = await bcrypt.genSalt(10);
+      updateFields.password = await bcrypt.hash(NewPassword, salt);
+    }
+    await UserModel.findByIdAndUpdate(req.user.id, updateFields, { new: true, runValidators: true });
+    res.status(200).send({
+      success: "true"
+    });
+  } catch (error) {
+    console.log(error)
     return next(new ErrorHandler(error.message, 400));
   }
 })
