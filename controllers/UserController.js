@@ -3,8 +3,8 @@ import CatchAsync from '../middleware/catchAsyncError.js';
 import ErrorHandler from '../utils/errorHandler.js';
 import UserModel from '../model/UserModel.js';
 import Joi from 'joi';
-// import dotenv from 'dotenv';
-// dotenv.config();
+import dotenv from 'dotenv';
+dotenv.config();
 
 // Register User
 const Registerschema = Joi.object({
@@ -19,8 +19,8 @@ export const registrationUser = CatchAsync(async (req, res, next) => {
     if (error) {
       return next(new ErrorHandler(error.details[0].message, 422));
     }
-    const isEmailExist = await UserModel.findOne({ email : value.email });
 
+    const isEmailExist = await UserModel.findOne({ email : value.email });
     if (isEmailExist) {
       return next(new ErrorHandler("Email Already Exist", 400));
     }
@@ -45,11 +45,11 @@ export const registrationUser = CatchAsync(async (req, res, next) => {
   }
 });
 
+// Login user
 const Loginschema = Joi.object({
   email: Joi.string().email().required("Email is required"),
   password: Joi.string().required("password is required"),
 });
-
 export const loginUser = CatchAsync(async (req, res, next) => {
   try {
 
@@ -74,8 +74,7 @@ export const loginUser = CatchAsync(async (req, res, next) => {
         id: user._id,
       },
     };
-    console.log(process.env.JWT_SECRET);
-    const authToken = jwt.sign(payload, process.env.JWT_SECRET);
+    const authToken = jwt.sign(payload, process.env.JWTSECRET);
     res.status(200).send({
       success: "true",
       token: authToken,
