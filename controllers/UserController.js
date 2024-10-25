@@ -140,3 +140,19 @@ export const updateUserInfo = CatchAsync(async (req, res, next) => {
     return next(new ErrorHandler(error.message, 400));
   }
 })
+
+export const deleteUser = CatchAsync(async (req, res, next) => {
+  try {
+    const user = await UserModel.findById(req.user.id);
+    if (!user) {
+      return next(new ErrorHandler("User not found", 404));
+    }
+    await UserModel.findByIdAndDelete(req.user.id);
+    res.status(200).send({
+      success: "true",
+      message : "User deleted Successfully!"
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 400));
+  }
+})
