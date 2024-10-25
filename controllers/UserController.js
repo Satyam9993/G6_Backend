@@ -133,10 +133,10 @@ export const updateUserInfo = CatchAsync(async (req, res, next) => {
     }
     await UserModel.findByIdAndUpdate(req.user.id, updateFields, { new: true, runValidators: true });
     res.status(200).send({
-      success: "true"
+      success: "true",
+      message : "User Details updated Successfully!"
     });
   } catch (error) {
-    console.log(error)
     return next(new ErrorHandler(error.message, 400));
   }
 })

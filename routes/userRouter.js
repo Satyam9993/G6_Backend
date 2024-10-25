@@ -1,5 +1,4 @@
 import express from 'express';
-// import { isAuthentificated } from '../middleware/auth.js';
 import { loginUser, registrationUser, getUserInfo, updateUserInfo } from '../controllers/UserController.js';
 import isAuthentificated from '../middleware/Auth.js';
 
@@ -10,7 +9,7 @@ userRouter.post('/login', loginUser);
 
 
 // Authenticate routes
-userRouter.get('/info', isAuthentificated, getUserInfo);
-userRouter.put('/updateinfo', isAuthentificated, updateUserInfo);
+userRouter.get('/getuserinfo', isAuthentificated, getUserInfo);
+userRouter.put('/updateuserinfo', isAuthentificated, updateUserInfo);
 
 export default userRouter;
