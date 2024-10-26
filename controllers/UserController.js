@@ -6,6 +6,7 @@ import UserModel from '../model/UserModel.js';
 import Joi from 'joi';
 import dotenv from 'dotenv';
 import { getUserById } from './../services/UserService.js';
+import UserDescModel from './../model/userDescription.js';
 dotenv.config();
 
 // Register User
@@ -33,6 +34,9 @@ export const registrationUser = CatchAsync(async (req, res, next) => {
         email: value.email,
         username: value.username,
         password: value.password
+      });
+      const UserDesc = await UserDescModel.create({
+        email: value.email,
       });
       res.send({
         status: 200,
@@ -131,7 +135,38 @@ export const updateUserInfo = CatchAsync(async (req, res, next) => {
       const salt = await bcrypt.genSalt(10);
       updateFields.password = await bcrypt.hash(NewPassword, salt);
     }
+    if(email){
+      const userdata = await UserModel.findById(req.user.id);
+      await UserDescModel.findOneAndUpdate({email: userdata.email}, {$set: {
+        email : email,
+      }});
+    }
     await UserModel.findByIdAndUpdate(req.user.id, updateFields, { new: true, runValidators: true });
+    
+    res.status(200).send({
+      success: "true",
+      message : "User Details updated Successfully!"
+    });
+  } catch (error) {
+    return next(new ErrorHandler(error.message, 400));
+  }
+})
+
+const updateUserDescpription = Joi.object({
+  description: Joi.string(),
+})
+
+export const updateUserDescp = CatchAsync(async (req, res, next) => {
+  try {
+    const { error, value } = updateUserDescpription.validate(req.body);
+    if (error) {
+      return next(new ErrorHandler(error.details[0].message, 422));
+    }
+
+    const user = await UserModel.findById(req.user.id);
+    await UserDescModel.findOneAndUpdate({email: user.email}, {$set: {
+      description : value.description
+    }});
     res.status(200).send({
       success: "true",
       message : "User Details updated Successfully!"
@@ -147,7 +182,9 @@ export const deleteUser = CatchAsync(async (req, res, next) => {
     if (!user) {
       return next(new ErrorHandler("User not found", 404));
     }
-    await UserModel.findByIdAndDelete(req.user.id);
+    
+    const data = await UserModel.findByIdAndDelete(req.user.id);
+    await UserDescModel.findOneAndDelete({email: data.email});
     res.status(200).send({
       success: "true",
       message : "User deleted Successfully!"
